@@ -49,3 +49,13 @@ export async function GET(req: Request) {
 
   return NextResponse.json(products);
 }
+
+export async function DELETE(req: Request) {
+  const { productId } = await req.json();
+  if (!productId)
+    return NextResponse.json({ error: "Product ID required" }, { status: 400 });
+
+  await prisma.product.delete({ where: { id: productId } });
+
+  return NextResponse.json({ message: "Product deleted" }, { status: 200 });
+}

@@ -40,3 +40,19 @@ export async function GET() {
 
   return NextResponse.json(user?.stores || []);
 }
+
+export async function DELETE(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.email)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { storeId } = await req.json();
+  if (!storeId)
+    return NextResponse.json({ error: "Store ID required" }, { status: 400 });
+
+  await prisma.store.delete({
+    where: { id: storeId },
+  });
+
+  return NextResponse.json({ message: "Store deleted" }, { status: 200 });
+}

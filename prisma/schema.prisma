@@ -7,18 +7,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// 🧍 USER AUTHENTICATION MODELS (BetterAuth / NextAuth)
+//
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?  
+  password      String?
   accounts      Account[]
   sessions      Session[]
   stores        Store[]
+  customers     Customer[]  // 👈 all customers under this owner
 }
-
 
 model Account {
   id                 String  @id @default(cuid())
@@ -54,25 +57,41 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+//
+// 🏪 BUSINESS MODELS
+//
 
 model Store {
-  id        String     @id @default(cuid())
+  id        String           @id @default(cuid())
   name      String
   ownerId   String
-  owner     User       @relation(fields: [ownerId], references: [id])
+  owner     User             @relation(fields: [ownerId], references: [id])
   products  Product[]
-  customers Customer[]
   invoices  Invoice[]
+  customers CustomerStore[]  // 👈 many-to-many link with customers
 }
 
 model Customer {
-  id       String    @id @default(cuid())
-  name     String
-  email    String?
-  phone    String    @unique
-  store    Store     @relation(fields: [storeId], references: [id])
-  storeId  String
-  invoices Invoice[]
+  id        String           @id @default(cuid())
+  name      String
+  email     String?
+  phone     String           @unique
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  stores    CustomerStore[]  // 👈 all stores the customer is associated with
+  invoices  Invoice[]
+  createdAt DateTime         @default(now())
+}
+
+model CustomerStore {
+  id          String   @id @default(cuid())
+  customerId  String
+  storeId     String
+  attendedAt  DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  store       Store    @relation(fields: [storeId], references: [id])
+
+  @@unique([customerId, storeId])
 }
 
 model Product {
