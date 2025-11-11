@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  stores    Store[]
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id        String     @id @default(cuid())
+  name      String
+  ownerId   String
+  owner     User       @relation(fields: [ownerId], references: [id])
+  products  Product[]
+  customers Customer[]
+  invoices  Invoice[]
+}
+
+model Customer {
+  id       String    @id @default(cuid())
+  name     String
+  email    String?
+  phone    String    @unique
+  store    Store     @relation(fields: [storeId], references: [id])
+  storeId  String
+  invoices Invoice[]
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  quantity    Int
+  store       Store         @relation(fields: [storeId], references: [id])
+  storeId     String
+  items       InvoiceItem[]
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber Int           @default(autoincrement())
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  customerId    String
+  store         Store         @relation(fields: [storeId], references: [id])
+  storeId       String
+  totalAmount   Float
+  createdAt     DateTime      @default(now())
+  items         InvoiceItem[]
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  invoiceId String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+  quantity  Int
+  unitPrice Float
+}
