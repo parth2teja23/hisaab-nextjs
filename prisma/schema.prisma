@@ -7,36 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//
-// 🧍 USER AUTHENTICATION MODELS (BetterAuth / NextAuth)
-//
 model User {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   password      String?
   accounts      Account[]
   sessions      Session[]
   stores        Store[]
-  customers     Customer[]  // 👈 all customers under this owner
+  customers     Customer[]
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
-  user               User     @relation(fields: [userId], references: [id])
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
 }
@@ -57,39 +54,35 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-//
-// 🏪 BUSINESS MODELS
-//
-
 model Store {
-  id        String           @id @default(cuid())
+  id        String          @id @default(cuid())
   name      String
   ownerId   String
-  owner     User             @relation(fields: [ownerId], references: [id])
+  owner     User            @relation(fields: [ownerId], references: [id])
   products  Product[]
   invoices  Invoice[]
-  customers CustomerStore[]  // 👈 many-to-many link with customers
+  customers CustomerStore[]
 }
 
 model Customer {
-  id        String           @id @default(cuid())
+  id        String          @id @default(cuid())
   name      String
   email     String?
-  phone     String           @unique
-  user      User             @relation(fields: [userId], references: [id])
+  phone     String          @unique
+  user      User            @relation(fields: [userId], references: [id])
   userId    String
-  stores    CustomerStore[]  // 👈 all stores the customer is associated with
+  stores    CustomerStore[]
   invoices  Invoice[]
-  createdAt DateTime         @default(now())
+  createdAt DateTime        @default(now())
 }
 
 model CustomerStore {
-  id          String   @id @default(cuid())
-  customerId  String
-  storeId     String
-  attendedAt  DateTime @default(now())
-  customer    Customer @relation(fields: [customerId], references: [id])
-  store       Store    @relation(fields: [storeId], references: [id])
+  id         String   @id @default(cuid())
+  customerId String
+  storeId    String
+  attendedAt DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id])
+  store      Store    @relation(fields: [storeId], references: [id])
 
   @@unique([customerId, storeId])
 }

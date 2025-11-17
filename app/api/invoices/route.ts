@@ -34,6 +34,9 @@ export async function POST(req: Request) {
       );
     }
 
+    // --------------------------------------------------
+    // ⭐ Auto-link customer to this store (core logic)
+    // --------------------------------------------------
     await prisma.customerStore.upsert({
       where: {
         customerId_storeId: {
@@ -45,6 +48,7 @@ export async function POST(req: Request) {
       create: { customerId: customer.id, storeId },
     });
 
+    // Fetch all products used in invoice
     const productIds = items.map((i) => i.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -68,6 +72,7 @@ export async function POST(req: Request) {
         );
 
       totalAmount += product.price * item.quantity;
+
       invoiceItems.push({
         productId: product.id,
         quantity: item.quantity,
@@ -75,6 +80,9 @@ export async function POST(req: Request) {
       });
     }
 
+    // --------------------------------------------------
+    // ⭐ Create invoice + update product stock
+    // --------------------------------------------------
     const invoice = await prisma.$transaction(async (tx) => {
       const newInvoice = await tx.invoice.create({
         data: {
@@ -86,6 +94,7 @@ export async function POST(req: Request) {
           },
         },
         include: {
+          customer: true,          // ⭐ important fix
           items: { include: { product: true } },
         },
       });
@@ -105,35 +114,6 @@ export async function POST(req: Request) {
     console.error("POST /api/invoices error:", error);
     return NextResponse.json(
       { error: "Something went wrong while creating invoice." },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(req: Request) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email)
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { searchParams } = new URL(req.url);
-    const storeId = searchParams.get("storeId");
-
-    const invoices = await prisma.invoice.findMany({
-      where: storeId ? { storeId } : undefined,
-      include: {
-        store: true,
-        customer: true,
-        items: { include: { product: true } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(invoices);
-  } catch (error) {
-    console.error("GET /api/invoices error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong while fetching invoices." },
       { status: 500 }
     );
   }

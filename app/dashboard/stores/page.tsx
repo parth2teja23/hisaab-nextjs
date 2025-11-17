@@ -22,7 +22,7 @@ export default function StoresPage() {
   const [stores, setStores] = useState<Store[]>([]);
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false); // 👈 controls dialog state
+  const [open, setOpen] = useState(false);
 
   // Fetch stores
   useEffect(() => {

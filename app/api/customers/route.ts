@@ -1,13 +1,12 @@
-
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-/**
- * POST /api/customers
- * Create or update a global customer for the logged-in user.
- */
+// ---------------------------
+// POST /api/customers
+// Global customer creation (NO STORE)
+// ---------------------------
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,14 +20,13 @@ export async function POST(req: Request) {
         { status: 400 }
       );
 
-    // Get the logged-in user (owner)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Find or create customer (unique by phone)
+    // Create or update global customer (not store specific)
     const customer = await prisma.customer.upsert({
       where: { phone },
       update: {
@@ -53,12 +51,12 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * GET /api/customers
- * Returns:
- *  - All customers of logged-in user (global CRM)
- *  - Or customers for a specific store if `storeId` is passed in query
- */
+// ---------------------------
+// GET /api/customers
+// Supports 2 modes:
+// 1. Global CRM (no storeId)
+// 2. Store-specific customers (storeId provided)
+// ---------------------------
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -68,18 +66,20 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const storeId = searchParams.get("storeId");
 
-    // Fetch user (owner)
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
+    // -------------------------------------
+    // 🎯 STORE MODE
+    // -------------------------------------
     if (storeId) {
-      // 🎯 Fetch customers linked to a specific store
       const customers = await prisma.customerStore.findMany({
         where: { storeId },
         include: { customer: true },
+        orderBy: { attendedAt: "desc" },
       });
 
       const formatted = customers.map((c) => ({
@@ -93,14 +93,15 @@ export async function GET(req: Request) {
       return NextResponse.json(formatted);
     }
 
-    // 🌍 Fetch all customers under this user (global view)
+    // -------------------------------------
+    // 🌍 GLOBAL MODE
+    // -------------------------------------
     const customers = await prisma.customer.findMany({
       where: { userId: user.id },
       include: {
-        stores: {
-          include: { store: true },
-        },
+        stores: { include: { store: true } },
       },
+      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(customers);
@@ -113,11 +114,9 @@ export async function GET(req: Request) {
   }
 }
 
-
-/**
- * DELETE /api/customers?id=<customerId>
- * Removes a customer (and their store links)
- */
+// ---------------------------
+// DELETE /api/customers?id=...
+// ---------------------------
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -126,10 +125,13 @@ export async function DELETE(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
-    if (!id)
-      return NextResponse.json({ error: "Customer ID required" }, { status: 400 });
 
-    // Delete customer and cascade customerStore entries
+    if (!id)
+      return NextResponse.json(
+        { error: "Customer ID required" },
+        { status: 400 }
+      );
+
     await prisma.customer.delete({
       where: { id },
     });
