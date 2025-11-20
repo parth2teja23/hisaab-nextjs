@@ -14,10 +14,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 
+type Customer = {
+  id: string;
+  name: string;
+  email?: string;
+  phone: string;
+};
+
+
 export default function StoreCustomersPage() {
   const { storeId } = useParams();
 
-  const [customers, setCustomers] = useState([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
@@ -31,27 +40,29 @@ export default function StoreCustomersPage() {
       .then(data => setCustomers(Array.isArray(data) ? data : []));
   }, [storeId]);
 
-  async function handleAddCustomer(e) {
-    e.preventDefault();
-    if (!form.name || !form.phone) return;
+  // TODO: fix this e:any 
+  async function handleAddCustomer(e:any) {
+  e.preventDefault();
+  if (!form.name || !form.phone) return;
 
-    setLoading(true);
+  setLoading(true);
 
-    const res = await fetch("/api/customers/store", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, storeId })
-    });
+  const res = await fetch("/api/customers/store", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...form, storeId })
+  });
 
-    if (res.ok) {
-      const newCust = await res.json();
-      setCustomers(prev => [...prev, newCust]);
-      setForm({ name: "", email: "", phone: "" });
-      setOpen(false);
-    }
-
-    setLoading(false);
+  if (res.ok) {
+    const newCust: Customer = await res.json();
+    setCustomers(prev => [...prev, newCust]);
+    setForm({ name: "", email: "", phone: "" });
+    setOpen(false);
   }
+
+  setLoading(false);
+}
+
 
   return (
     <div className="max-w-5xl mx-auto p-6">
