@@ -62,7 +62,7 @@ export default function StoreInvoicesPage() {
   useEffect(() => {
     if (!storeId) return;
 
-    fetch(`/api/customers?storeId=${storeId}`)
+    fetch(`/api/customers/store/`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setCustomers(data);

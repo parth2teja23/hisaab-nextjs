@@ -118,3 +118,37 @@ export async function POST(req: Request) {
     );
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { searchParams } = new URL(req.url);
+    const storeId = searchParams.get("storeId");
+
+    if (!storeId)
+      return NextResponse.json(
+        { error: "Store ID required" },
+        { status: 400 }
+      );
+
+    const invoices = await prisma.invoice.findMany({
+      where: { storeId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        customer: true,
+        items: { include: { product: true } }
+      }
+    });
+
+    return NextResponse.json(invoices, { status: 200 });
+  } catch (err) {
+    console.error("GET /api/invoices error:", err);
+    return NextResponse.json(
+      { error: "Something went wrong while fetching invoices." },
+      { status: 500 }
+    );
+  }
+}

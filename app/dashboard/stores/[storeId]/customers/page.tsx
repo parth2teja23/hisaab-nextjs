@@ -26,7 +26,7 @@ export default function StoreCustomersPage() {
   useEffect(() => {
     if (!storeId) return;
 
-    fetch(`/api/customers?storeId=${storeId}`)
+    fetch(`/api/customers/store?storeId=${storeId}`)
       .then(res => res.json())
       .then(data => setCustomers(Array.isArray(data) ? data : []));
   }, [storeId]);

@@ -28,7 +28,7 @@ export default function CustomersPage() {
 
   // 🧠 Fetch all customers (global)
   useEffect(() => {
-    fetch("/api/customers")
+    fetch("/api/customers/store")
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
         if (Array.isArray(data)) setCustomers(data);
