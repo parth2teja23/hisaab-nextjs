@@ -20,12 +20,20 @@ async function main() {
     },
   });
 
-  // 👥 create a customer
+  // 👥 create a customer (NO storeId here)
   const customer = await prisma.customer.create({
     data: {
       name: "Test Customer",
       phone: "9999999999",
       email: "customer@test.com",
+      userId: user.id,
+    },
+  });
+
+  // 🔗 connect customer to store via CustomerStore
+  await prisma.customerStore.create({
+    data: {
+      customerId: customer.id,
       storeId: store.id,
     },
   });
