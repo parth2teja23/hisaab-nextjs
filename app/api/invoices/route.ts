@@ -55,7 +55,9 @@ export async function POST(req: Request) {
     });
 
     let totalAmount = 0;
-    const invoiceItems = [];
+    // TODO: Fix this according to schema.
+    const invoiceItems: any[] = [];
+
 
     for (const item of items) {
       const product = products.find((p) => p.id === item.productId);
