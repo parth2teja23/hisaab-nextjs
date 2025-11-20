@@ -1,48 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { Home, Store, Boxes, Users, Receipt, Settings, LogOut } from "lucide-react";
+import { usePathname, useParams } from "next/navigation";
+import { Package, FileText, Users } from "lucide-react";
+import clsx from "clsx";
 
 export default function Sidebar() {
-  const { data: session } = useSession();
+  const pathname = usePathname();
+  const { storeId } = useParams(); // <-- important
+
+  const base = `/dashboard/stores/${storeId}`;
+
+  const links = [
+    { href: `${base}/products`, label: "Products", icon: Package },
+    { href: `${base}/invoices`, label: "Invoices", icon: FileText },
+    { href: `${base}/customers`, label: "Customers", icon: Users },
+  ];
 
   return (
-    <aside className="w-64 min-h-screen border-r bg-gray-50 p-5">
-      <h2 className="text-2xl font-semibold mb-6">Dashboard</h2>
-
+    <aside className="h-screen w-60 border-r bg-white p-4">
       <nav className="space-y-2">
-        <SidebarItem href="/dashboard" icon={<Home size={18} />} label="Overview" />
-        <SidebarItem href="/dashboard/stores" icon={<Store size={18} />} label="Stores" />
-        <SidebarItem href="/dashboard/products" icon={<Boxes size={18} />} label="Products" />
-        <SidebarItem href="/dashboard/customers" icon={<Users size={18} />} label="All Customers" />
-        <SidebarItem href="/dashboard/invoices" icon={<Receipt size={18} />} label="Invoices" />
-        <SidebarItem href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" />
+        {links.map(({ href, label, icon: Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={clsx(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition",
+                active
+                  ? "bg-black text-white"
+                  : "text-gray-700 hover:bg-gray-100"
+              )}
+            >
+              <Icon size={18} />
+              {label}
+            </Link>
+          );
+        })}
       </nav>
-
-      {session && (
-        <Button
-          variant="destructive"
-          className="mt-10 w-full flex items-center gap-2"
-          onClick={() => signOut()}
-        >
-          <LogOut size={16} />
-          Logout
-        </Button>
-      )}
     </aside>
-  );
-}
-
-function SidebarItem({ href, icon, label }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-200 transition text-gray-700"
-    >
-      {icon}
-      <span>{label}</span>
-    </Link>
   );
 }

@@ -1,104 +1,142 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { IndianRupee, Package } from "lucide-react";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/lib/auth";
+// import { redirect } from "next/navigation";
+// import LogoutButton from "@/components/LogoutButton";
 
-export default async function Dashboard() {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/api/auth/signin");
+// export default async function Dashboard() {
+//   const session = await getServerSession(authOptions);
 
-  // Fetch all stores of this user
-  const stores = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/stores`, {
-    cache: "no-store",
-  }).then(r => r.json());
+//   // 🛑 If no session, redirect to login
+//   if (!session) redirect("/api/auth/signin");
 
-  // Build extended store stats
-  const storesWithStats = await Promise.all(
-    stores.map(async (store: any) => {
-      const products = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/products?storeId=${store.id}`,
-        { cache: "no-store" }
-      ).then(r => r.json());
+//   return (
+//     <div className="p-8">
+//       <h1 className="text-2xl font-semibold">
+//         Welcome, {session.user?.name || "User"} 👋
+//       </h1>
+//       <p className="text-gray-600 mt-2">
+//         You are signed in with {session.user?.email}
+//       </p>
+//       <LogoutButton />
+//     </div>
+//   );
+// }
 
-      const inventoryCount = products.length;
+"use client";
 
-      const monthlySales = products.reduce(
-        (acc: number, p: any) => acc + p.price * p.quantity,
-        0
-      );
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
 
-      return {
-        ...store,
-        monthlySales,
-        inventoryCount,
-      };
-    })
-  );
+interface Store {
+  id: string;
+  name: string;
+}
+
+export default function StoresPage() {
+  const [stores, setStores] = useState<Store[]>([]);
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  // Fetch stores
+  useEffect(() => {
+    fetch("/api/stores")
+      .then((res) => res.json())
+      .then((data) => setStores(data))
+      .catch((err) => console.error("Error loading stores", err));
+  }, []);
+
+  async function handleCreateStore(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+
+      if (res.ok) {
+        const newStore = await res.json();
+        setStores((prev) => [...prev, newStore]);
+        setName("");
+        setOpen(false); // 👈 closes the dialog automatically
+      }
+    } catch (err) {
+      console.error("Error creating store:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="p-10 max-w-4xl mx-auto">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-semibold">Your Stores</h1>
 
-        <Link
-          href="/stores"
-          className="px-4 py-2 rounded-md bg-gray-200 text-black font-medium"
-        >
-          Manage Stores
-        </Link>
-      </div>
+        {/* Controlled Dialog */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => setOpen(true)}>Create Store</Button>
+          </DialogTrigger>
 
-      {/* STORE LIST */}
-      <div className="space-y-4 mb-12">
-        {storesWithStats.map((store: any) => (
-          <Link
-            key={store.id}
-            href={`/dashboard/${store.id}`}
-            className="block border rounded-xl p-5 hover:bg-gray-100 transition"
-          >
-            <div className="flex justify-between items-center">
-              <div className="text-xl font-medium">{store.name}</div>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Store</DialogTitle>
+            </DialogHeader>
 
-              <div className="flex items-center gap-6">
-                {/* Sales */}
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="h-5 w-5" />
-                  <span className="font-semibold">
-                    Rs. {store.monthlySales.toLocaleString()}
-                  </span>
-                </div>
-
-                {/* Inventory */}
-                <div className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  <span className="font-semibold">{store.inventoryCount}</span>
-                </div>
-
-                <span className="text-xl">{">"}</span>
+            <form onSubmit={handleCreateStore} className="space-y-4 mt-4">
+              <div>
+                <Label htmlFor="name">Store Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ex: Pakeeza Women Wear"
+                  required
+                />
               </div>
-            </div>
-          </Link>
-        ))}
+
+              <Button type="submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Store"}
+              </Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* SALES + CUSTOMERS SECTION */}
-      <div className="grid grid-cols-2 gap-8 mt-10">
-        <div className="border p-6 rounded-xl">
-          <div className="text-2xl font-semibold">Sales</div>
-          <div className="text-sm text-gray-500 mb-4">in last 30 days</div>
-          <div className="h-32 border rounded-lg"></div>
+      {/* Store List */}
+      {stores.length === 0 ? (
+        <p className="text-gray-500">No stores created yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {stores.map((store) => (
+            <Card
+              key={store.id}
+              className="p-4 hover:shadow-md transition cursor-pointer"
+              onClick={() =>
+                (window.location.href = `/dashboard/stores/${store.id}`)
+              }
+            >
+              <h2 className="font-medium text-lg">{store.name}</h2>
+              <p className="text-sm text-gray-500 mt-1">ID: {store.id}</p>
+            </Card>
+          ))}
         </div>
-
-        <div className="border p-6 rounded-xl">
-          <div className="text-2xl font-semibold">Customers</div>
-          <div className="text-sm text-gray-500 mb-4">
-            added in last 30 days
-          </div>
-          <div className="h-32 border rounded-lg"></div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
