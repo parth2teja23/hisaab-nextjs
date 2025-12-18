@@ -1,0 +1,11 @@
+# TODOs
+ - Add GST feature in invoice creation
+ - Add print and export to pdf in invoice feature
+ - Add mail feature (for invoice and creating new store)
+    - forgot password password mail
+ - Add image upload and cdn using imagekit/cloudinary
+    - Image generation for product using nano banana
+ - Add charts for dashboard to monitor performance of store
+ - add  AI chatbot for custom analytics
+ - add vendor for product
+ - add t&c and privacy policy page

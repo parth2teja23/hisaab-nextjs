@@ -93,10 +93,12 @@ model Product {
   description String?
   price       Float
   quantity    Int
+  imageUrl    String?       
   store       Store         @relation(fields: [storeId], references: [id])
   storeId     String
   items       InvoiceItem[]
 }
+
 
 model Invoice {
   id            String        @id @default(cuid())

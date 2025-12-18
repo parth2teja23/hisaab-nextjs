@@ -48,26 +48,5 @@ export const authOptions: AuthOptions = {
   /**
    * ✅ Callbacks: This is where we handle merging accounts
    */
-  callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-        });
-
-        // If a user with same email exists, link this Google account to them
-        if (existingUser && existingUser.id !== user.id) {
-          await prisma.account.updateMany({
-            where: {
-              provider: "google",
-              providerAccountId: account.providerAccountId,
-            },
-            data: { userId: existingUser.id },
-          });
-        }
-      }
-
-      return true; // allow sign in
-    },
-  },
+  callbacks: {},
 };

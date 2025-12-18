@@ -20,6 +20,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import jsPDF from "jspdf";
 
 interface Customer {
   id: string;
@@ -117,6 +118,86 @@ export default function StoreInvoicesPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // PDF generator for a single invoice
+  function generatePdf(inv: any) {
+    const doc = new jsPDF({
+      unit: "pt",
+      format: "a4",
+    });
+
+    const marginLeft = 40;
+    let cursorY = 50;
+
+    // Header
+    doc.setFontSize(18);
+    doc.text(`Invoice #${inv.invoiceNumber}`, marginLeft, cursorY);
+    doc.setFontSize(11);
+    cursorY += 22;
+    doc.text(`Date: ${inv.date ? new Date(inv.date).toLocaleDateString() : ""}`, marginLeft, cursorY);
+    cursorY += 18;
+
+    // Store / Customer block
+    doc.setFontSize(12);
+    cursorY += 6;
+    doc.text("Customer:", marginLeft, cursorY);
+    doc.setFontSize(11);
+    doc.text(`${inv.customer?.name ?? "—"}`, marginLeft + 70, cursorY);
+    cursorY += 16;
+    doc.text(`Phone: ${inv.customer?.phone ?? "—"}`, marginLeft + 70, cursorY);
+    cursorY += 24;
+
+    // Table header
+    doc.setFontSize(12);
+    doc.text("Item", marginLeft, cursorY);
+    doc.text("Qty", marginLeft + 280, cursorY);
+    doc.text("Unit", marginLeft + 340, cursorY);
+    doc.text("Total", marginLeft + 430, cursorY);
+    cursorY += 8;
+    doc.setLineWidth(0.5);
+    doc.line(marginLeft, cursorY, 560, cursorY);
+    cursorY += 14;
+
+    // Items
+    doc.setFontSize(11);
+    (inv.items ?? []).forEach((item: any, idx: number) => {
+      const name = item.product?.name ?? "Unknown";
+      const qty = item.quantity ?? 0;
+      const unitPrice = item.unitPrice ?? 0;
+      const lineTotal = (qty * unitPrice) || 0;
+
+      // Wrap long product names if needed
+      const maxNameWidth = 260;
+      const splitName = doc.splitTextToSize(name, maxNameWidth);
+      doc.text(splitName, marginLeft, cursorY);
+      // write the rest of columns on same baseline
+      doc.text(String(qty), marginLeft + 280, cursorY);
+      doc.text(`₹${unitPrice.toFixed(2)}`, marginLeft + 340, cursorY);
+      doc.text(`₹${lineTotal.toFixed(2)}`, marginLeft + 430, cursorY);
+
+      // move cursor down by number of wrapped lines
+      cursorY += 14 * splitName.length;
+
+      // If page overflow, add page
+      if (cursorY > 720) {
+        doc.addPage();
+        cursorY = 50;
+      }
+    });
+
+    cursorY += 12;
+    doc.line(marginLeft, cursorY, 560, cursorY);
+    cursorY += 18;
+
+    // Totals
+    const totalAmount = inv.totalAmount ?? (inv.items ?? []).reduce((s: number, it: any) => s + (it.unitPrice * it.quantity), 0);
+    doc.setFontSize(12);
+    doc.text(`Total: ₹${Number(totalAmount).toFixed(2)}`, marginLeft + 300, cursorY);
+
+    // Save file
+    const filename = `invoice-${inv.invoiceNumber ?? inv.id}.pdf`;
+    doc.save(filename);
   }
 
   return (
@@ -234,7 +315,23 @@ export default function StoreInvoicesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {invoices.map((inv) => (
-            <Card key={inv.id} className="p-4">
+            <Card key={inv.id} className="p-4 relative">
+              {/* PDF icon top-left */}
+              <button
+                title="Download PDF"
+                onClick={() => generatePdf(inv)}
+                className="absolute right-3 top-3 p-1 rounded hover:bg-gray-100"
+                aria-label={`Download invoice ${inv.invoiceNumber} as PDF`}
+              >
+                {/* simple pdf svg icon */}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M14 2V8H20" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 18H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 14H8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+
               <h2 className="font-semibold text-lg">
                 Invoice #{inv.invoiceNumber}
               </h2>

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name, description, price, quantity, storeId } = await req.json();
+  const { name, description, price, quantity, storeId, imageUrl } = await req.json();
 
   if (!name || !price || !quantity || !storeId)
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       description,
       price,
       quantity,
+      imageUrl,
       storeId,
     },
   });
