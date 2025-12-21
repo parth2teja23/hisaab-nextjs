@@ -542,7 +542,7 @@ export default function ProductsPage() {
               {/* ---- AI Section ---- */}
               <div className="space-y-2 border-b pb-6">
                 <div className="flex justify-between items-center">
-                   <Label htmlFor="prompt">Generate with Nano Banana 🍌</Label>
+                   <Label htmlFor="prompt">Generate Image</Label>
                 </div>
                 
                 <Textarea
@@ -556,9 +556,9 @@ export default function ProductsPage() {
                 <Button
                   onClick={handleAIGenerate}
                   disabled={isBusy || !imagePrompt.trim() || !!imageUrl}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700"
+                  className="w-full bg-black hover:bg-neutral-800"
                 >
-                  {generating ? "Generating with Gemini..." : "Generate Image"}
+                  {generating ? "Generating Image..." : "Generate Image"}
                 </Button>
               </div>
 
