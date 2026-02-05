@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     }
 
     // Call the model using the syntax from your docs
-    // FIX: Removed the 'config' block that caused the JSON mode error
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-image",
       contents: prompt,
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
     // Return it to the frontend
     return NextResponse.json({ b64: base64Image });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[IMAGE_GENERATE_ERROR]", error);
     return new NextResponse(error.message || "Internal Error", { status: 500 });
   }

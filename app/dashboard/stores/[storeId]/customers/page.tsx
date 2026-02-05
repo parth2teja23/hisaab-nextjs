@@ -40,8 +40,7 @@ export default function StoreCustomersPage() {
       .then(data => setCustomers(Array.isArray(data) ? data : []));
   }, [storeId]);
 
-  // TODO: fix this e:any 
-  async function handleAddCustomer(e:any) {
+  async function handleAddCustomer(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();
   if (!form.name || !form.phone) return;
 

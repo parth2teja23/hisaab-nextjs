@@ -1,6 +1,7 @@
 // lib/mail-service.ts
 import nodemailer from "nodemailer";
 import PDFDocument from "pdfkit";
+import type { Invoice, InvoiceItem } from "@/lib/types";
 
 // 1. Configure the Transporter
 const transporter = nodemailer.createTransport({
@@ -14,7 +15,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // 2. Helper to generate PDF Buffer
-function generateInvoicePDF(invoice: any): Promise<Buffer> {
+function generateInvoicePDF(invoice: Invoice): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: 50 });
@@ -49,7 +50,7 @@ function generateInvoicePDF(invoice: any): Promise<Buffer> {
       let yPosition = tableTop + 25;
       doc.font("Helvetica");
 
-      invoice.items.forEach((item: any) => {
+      invoice.items.forEach((item: InvoiceItem) => {
         const productName = item.product?.name || "Product";
         const total = item.quantity * item.unitPrice;
 
@@ -77,7 +78,7 @@ function generateInvoicePDF(invoice: any): Promise<Buffer> {
 }
 
 // 3. Main function to send email
-export async function sendInvoiceEmail(toEmail: string, invoice: any) {
+export async function sendInvoiceEmail(toEmail: string, invoice: Invoice) {
   try {
     const pdfBuffer = await generateInvoicePDF(invoice);
     const storeNameForEmail = invoice.store?.name || "Hisaab Store";

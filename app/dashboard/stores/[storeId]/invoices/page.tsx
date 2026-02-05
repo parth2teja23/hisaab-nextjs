@@ -21,6 +21,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import jsPDF from "jspdf";
+import type { Invoice } from "@/lib/types";
 
 interface Customer {
   id: string;
@@ -50,7 +51,7 @@ export default function StoreInvoicesPage() {
   const [form, setForm] = useState({ customerPhone: "" });
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   const total = Array.isArray(products)
     ? invoiceItems.reduce((sum, i) => {
@@ -121,7 +122,7 @@ export default function StoreInvoicesPage() {
   }
 
   // PDF generator for a single invoice
-  function generatePdf(inv: any) {
+  function generatePdf(inv: Invoice) {
     const doc = new jsPDF({
       unit: "pt",
       format: "a4",
@@ -161,7 +162,7 @@ export default function StoreInvoicesPage() {
 
     // Items
     doc.setFontSize(11);
-    (inv.items ?? []).forEach((item: any, idx: number) => {
+    (inv.items ?? []).forEach((item) => {
       const name = item.product?.name ?? "Unknown";
       const qty = item.quantity ?? 0;
       const unitPrice = item.unitPrice ?? 0;
@@ -191,7 +192,7 @@ export default function StoreInvoicesPage() {
     cursorY += 18;
 
     // Totals
-    const totalAmount = inv.totalAmount ?? (inv.items ?? []).reduce((s: number, it: any) => s + (it.unitPrice * it.quantity), 0);
+    const totalAmount = inv.totalAmount ?? (inv.items ?? []).reduce((s, it) => s + (it.unitPrice * it.quantity), 0);
     doc.setFontSize(12);
     doc.text(`Total: ₹${Number(totalAmount).toFixed(2)}`, marginLeft + 300, cursorY);
 
@@ -339,7 +340,7 @@ export default function StoreInvoicesPage() {
                 Customer: {inv.customer?.name || "—"}
               </p>
               <ul className="text-sm text-gray-700 mt-2">
-                {inv.items?.map((item: any) => (
+                {inv.items?.map((item) => (
                   <li key={item.id}>
                     {item.product?.name} × {item.quantity} = ₹
                     {(item.unitPrice * item.quantity).toFixed(2)}

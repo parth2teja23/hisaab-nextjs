@@ -423,7 +423,7 @@ export default function ProductsPage() {
       // 4. Upload to Cloudinary
       await uploadToCloudinary(dataUri);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("AI Error:", error);
       alert("AI Generation failed: " + error.message);
     } finally {

@@ -1,9 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, IndianRupee, Package, Users } from "lucide-react";
+import type { StoreStats } from "@/lib/types";
 
 // components/hisaab/StoreDashboard.tsx
-export default function StoreDashboard({ store }: { store: any }) {
+export default function StoreDashboard({ store }: { store: StoreStats }) {
   const monthlySales = store.monthlySales;
   const inventory = store.inventory;
   const recentTransactions = store.recentTransactions;
@@ -70,13 +71,13 @@ export default function StoreDashboard({ store }: { store: any }) {
       <section className="bg-white p-6 rounded-2xl shadow max-w-5xl mx-auto">
         <h2 className="text-2xl font-semibold mb-4">Recent Transactions</h2>
         <div className="flex flex-col gap-4">
-          {recentTransactions.map((t: any, i: number) => (
+          {recentTransactions.map((t, i) => (
             <div key={i} className="flex justify-between items-center border-b pb-3">
               <div>
-                <p className="font-medium">Invoice #{t.number}</p>
+                <p className="font-medium">Invoice #{t.invoiceNumber}</p>
                 <p className="text-sm text-gray-500">{t.customerName}</p>
               </div>
-              <p className="font-semibold">₹{t.total}</p>
+              <p className="font-semibold">₹{t.amount}</p>
             </div>
           ))}
         </div>
