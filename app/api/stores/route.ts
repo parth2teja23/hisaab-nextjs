@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   if (!session?.user?.email)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { name } = await req.json();
+  const { name, imageUrl } = await req.json();
   if (!name)
     return NextResponse.json({ error: "Store name is required" }, { status: 400 });
 
@@ -21,6 +21,7 @@ export async function POST(req: Request) {
   const store = await prisma.store.create({
     data: {
       name,
+      imageUrl: imageUrl ?? null,
       ownerId: user.id,
     },
   });

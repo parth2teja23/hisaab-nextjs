@@ -57,6 +57,7 @@ model VerificationToken {
 model Store {
   id        String          @id @default(cuid())
   name      String
+  imageUrl  String?
   ownerId   String
   owner     User            @relation(fields: [ownerId], references: [id])
   products  Product[]
