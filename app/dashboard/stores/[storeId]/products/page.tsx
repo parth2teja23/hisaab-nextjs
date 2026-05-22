@@ -1,299 +1,3 @@
-// "use client";
-
-// import { useEffect, useState, useRef } from "react"; // 1. IMPORT useRef
-// import { useParams } from "next/navigation";
-// import { Button } from "@/components/ui/button";
-// import {
-//   Dialog,
-//   DialogContent,
-//   DialogHeader,
-//   DialogTitle,
-//   DialogTrigger,
-// } from "@/components/ui/dialog";
-// import { Input } from "@/components/ui/input";
-// import { Label } from "@/components/ui/label";
-// import { Card } from "@/components/ui/card";
-
-// interface Product {
-//   id: string;
-//   name: string;
-//   description?: string;
-//   price: number;
-//   quantity: number;
-//   imageUrl?: string;
-// }
-
-// export default function ProductsPage() {
-//   const params = useParams();
-//   const storeId = params.storeId as string;
-  
-//   // 2. CREATE THE REF
-//   const fileInputRef = useRef<HTMLInputElement>(null);
-
-//   const [products, setProducts] = useState<Product[]>([]);
-//   const [open, setOpen] = useState(false);
-//   const [imageDialog, setImageDialog] = useState(false);
-//   const [loading, setLoading] = useState(false);
-  
-//   // Add an uploading state to disable button while image uploads
-//   const [uploading, setUploading] = useState(false); 
-
-//   const [form, setForm] = useState({
-//     name: "",
-//     description: "",
-//     price: "",
-//     quantity: "",
-//   });
-
-//   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-//   useEffect(() => {
-//     if (!storeId) return;
-//     fetch(`/api/products?storeId=${storeId}`)
-//       .then((res) => res.json())
-//       .then((data) => setProducts(data))
-//       .catch((err) => console.error(err));
-//   }, [storeId]);
-
-//   async function handleImageUpload(file: File) {
-//     if (!file.type.startsWith("image/")) {
-//       alert("Only images allowed");
-//       return;
-//     }
-    
-//     setUploading(true); // Start loading spinner/disable
-
-//     const formData = new FormData();
-//     formData.append("file", file);
-//     // TODO: change cloud name and cloud preset and use from .env file
-//     formData.append("upload_preset", "hisaab_products"); 
-//     formData.append("cloud_name", 'daetznp27'!);
-    
-
-//     try {
-//       const res = await fetch(
-//         // TODO: change cloud preset name here too.
-//         `https://api.cloudinary.com/v1_1/daetznp27/image/upload`,
-//         {
-//           method: "POST",
-//           body: formData,
-//         }
-//       );
-//       const data = await res.json();
-//       console.log("Cloudinary Response:", data);
-//       setImageUrl(data.secure_url);
-//     } catch (error) {
-//       console.error("Upload failed", error);
-//       alert("Upload failed. Check console.");
-//     } finally {
-//       setUploading(false); // Stop loading
-//     }
-//   }
-
-//   async function createProduct() {
-//     if (!form.name.trim() || !form.price || !form.quantity) return;
-
-//     setLoading(true);
-//     try {
-//       const res = await fetch("/api/products", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           name: form.name,
-//           description: form.description,
-//           price: parseFloat(form.price),
-//           quantity: parseInt(form.quantity),
-//           imageUrl,
-//           storeId,
-//         }),
-//       });
-
-//       if (res.ok) {
-//         const newProduct = await res.json();
-//         setProducts((prev) => [...prev, newProduct]);
-
-//         setForm({ name: "", description: "", price: "", quantity: "" });
-//         setImageUrl(null);
-//         setOpen(false);
-//         setImageDialog(false);
-//       }
-//     } catch (err) {
-//       console.error(err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   }
-
-//   return (
-//     <div className="max-w-5xl mx-auto p-6">
-//       <div className="flex items-center justify-between mb-8">
-//         <div>
-//           <h1 className="text-3xl font-semibold">Inventory</h1>
-//           <p className="text-gray-500">Store ID: {storeId}</p>
-//         </div>
-
-//         {/* Step 1: Product details */}
-//         <Dialog open={open} onOpenChange={setOpen}>
-//           <DialogTrigger asChild>
-//             <Button>Add Product</Button>
-//           </DialogTrigger>
-
-//           <DialogContent>
-//             <DialogHeader>
-//               <DialogTitle>Product Details</DialogTitle>
-//             </DialogHeader>
-
-//             <div className="space-y-4 mt-4">
-//               <div>
-//                 <Label htmlFor="name">Product Name</Label>
-//                 <Input
-//                   id="name"
-//                   value={form.name}
-//                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-//                   placeholder="e.g., Silk Kurti"
-//                   required
-//                 />
-//               </div>
-
-//               <div>
-//                 <Label htmlFor="description">Description</Label>
-//                 <Input
-//                   id="description"
-//                   value={form.description}
-//                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-//                   placeholder="Short description"
-//                 />
-//               </div>
-
-//               <div className="flex gap-4">
-//                 <div className="flex-1">
-//                   <Label htmlFor="price">Price</Label>
-//                   <Input
-//                     id="price"
-//                     type="number"
-//                     value={form.price}
-//                     onChange={(e) => setForm({ ...form, price: e.target.value })}
-//                     required
-//                   />
-//                 </div>
-
-//                 <div className="flex-1">
-//                   <Label htmlFor="quantity">Quantity</Label>
-//                   <Input
-//                     id="quantity"
-//                     type="number"
-//                     value={form.quantity}
-//                     onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-//                     required
-//                   />
-//                 </div>
-//               </div>
-
-//               <Button
-//                 onClick={() => {
-//                   setOpen(false);
-//                   setImageDialog(true);
-//                 }}
-//               >
-//                 Next
-//               </Button>
-//             </div>
-//           </DialogContent>
-//         </Dialog>
-
-//         {/* Step 2: Image dialog (FIXED SECTION) */}
-//         <Dialog open={imageDialog} onOpenChange={setImageDialog}>
-//           <DialogContent>
-//             <DialogHeader>
-//               <DialogTitle>Add Image</DialogTitle>
-//             </DialogHeader>
-
-//             <div className="flex flex-col gap-4">
-//                <div className="flex gap-3">
-//                   <Button variant="outline">Create image from AI</Button>
-                  
-//                   {/* 3. HIDDEN INPUT */}
-//                   <input
-//                     type="file"
-//                     ref={fileInputRef}
-//                     accept="image/*"
-//                     hidden
-//                     onChange={(e) => {
-//                       const file = e.target.files?.[0];
-//                       console.log("Selected file:", file); // DEBUG
-
-//                       if (file) handleImageUpload(file);
-//                     }}
-//                   />
-
-//                   {/* 4. BUTTON TRIGGERS INPUT */}
-//                   <Button 
-//                     variant="outline" 
-//                     disabled={uploading}
-//                     onClick={() => fileInputRef.current?.click()}
-//                   >
-//                     {uploading ? "Uploading..." : "Upload image"}
-//                   </Button>
-//                </div>
-
-//                {/* 5. PREVIEW OUTSIDE THE BUTTONS */}
-//                {imageUrl && (
-//                  <div className="relative rounded-md overflow-hidden border">
-//                     <img
-//                       src={imageUrl}
-//                       className="w-full h-40 object-cover"
-//                       alt="Preview"
-//                     />
-//                     <Button
-//                       variant="destructive"
-//                       size="sm"
-//                       className="absolute top-2 right-2 h-8"
-//                       onClick={() => setImageUrl(null)}
-//                     >
-//                       Remove
-//                     </Button>
-//                  </div>
-//                )}
-//             </div>
-
-//             <Button
-//               disabled={loading || uploading} 
-//               onClick={createProduct}
-//               className="mt-4"
-//             >
-//               {loading ? "Saving..." : "Save Product"}
-//             </Button>
-//           </DialogContent>
-//         </Dialog>
-//       </div>
-
-//       {/* Products grid */}
-//       {products.length === 0 ? (
-//         <p className="text-gray-500">No products added yet.</p>
-//       ) : (
-//         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-//           {products.map((p) => (
-//             <Card key={p.id} className="p-4">
-//               {p.imageUrl && (
-//                 <img
-//                   src={p.imageUrl}
-//                   className="w-full h-40 object-cover rounded-md mb-2"
-//                 />
-//               )}
-//               <h2 className="font-medium text-lg">{p.name}</h2>
-//               <p className="text-sm text-gray-500">{p.description}</p>
-//               <div className="mt-2 flex justify-between text-sm">
-//                 <span>₹{p.price}</span>
-//                 <span className="text-gray-500">Qty: {p.quantity}</span>
-//               </div>
-//             </Card>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -308,8 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Plus, Package, ImageIcon, Sparkles } from "lucide-react";
 
 interface Product {
   id: string;
@@ -332,6 +36,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const [form, setForm] = useState({
     name: "",
@@ -340,7 +45,6 @@ export default function ProductsPage() {
     quantity: "",
   });
 
-  // We still keep this state in case the user wants to manually edit the AI prompt
   const [imagePrompt, setImagePrompt] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -351,14 +55,14 @@ export default function ProductsPage() {
     if (!storeId) return;
     fetch(`/api/products?storeId=${storeId}`)
       .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch((err) => console.error(err));
+      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .catch((err) => console.error(err))
+      .finally(() => setFetching(false));
   }, [storeId]);
 
-  // When the Image Dialog opens, pre-fill the prompt with Name + Description
   useEffect(() => {
     if (imageDialog && form.name) {
-      const autoPrompt = `Professional studio product shot of ${form.name}. ${form.description || ""} , white background, high quality.`;
+      const autoPrompt = `Professional studio product shot of ${form.name}. ${form.description || ""}, white background, high quality.`;
       setImagePrompt(autoPrompt);
     }
   }, [imageDialog, form.name, form.description]);
@@ -375,10 +79,7 @@ export default function ProductsPage() {
         { method: "POST", body: formData }
       );
       const data = await res.json();
-
       if (data.error) throw new Error(data.error.message);
-
-      console.log("Cloudinary Success:", data);
       setImageUrl(data.secure_url);
     } catch (error) {
       console.error("Upload failed", error);
@@ -388,44 +89,27 @@ export default function ProductsPage() {
     }
   }
 
-  // --- HANDLER: AI Generation (Nano Banana) ---
   async function handleAIGenerate() {
-    // 1. Validate we have a prompt (either auto-filled or user edited)
-    if (!imagePrompt.trim()) {
-      alert("Prompt is empty. Please enter product details first.");
-      return;
-    }
-
+    if (!imagePrompt.trim()) return;
     try {
       setGenerating(true);
-
-      // 2. Call our Next.js API (which calls Nano Banana)
       const response = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: imagePrompt }),
       });
 
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(err || "Failed to generate");
-      }
+      if (!response.ok) throw new Error("Failed to generate");
 
       const data = await response.json();
       const base64String = data.b64;
+      if (!base64String) throw new Error("No image data received");
 
-      if (!base64String) throw new Error("No image data received from AI");
-
-      // 3. Convert Base64 to a format Cloudinary accepts directly
-      // Cloudinary expects: "data:image/png;base64,....."
       const dataUri = `data:image/png;base64,${base64String}`;
-
-      // 4. Upload to Cloudinary
       await uploadToCloudinary(dataUri);
-
     } catch (error: unknown) {
       console.error("AI Error:", error);
-      alert("AI Generation failed: " + error.message);
+      alert("AI Generation failed.");
     } finally {
       setGenerating(false);
     }
@@ -433,7 +117,6 @@ export default function ProductsPage() {
 
   async function createProduct() {
     if (!form.name.trim() || !form.price || !form.quantity) return;
-
     setLoading(true);
     try {
       const res = await fetch("/api/products", {
@@ -465,170 +148,275 @@ export default function ProductsPage() {
     }
   }
 
-  // Helper boolean for UI states
   const isBusy = loading || uploading || generating;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-semibold">Inventory</h1>
-          <p className="text-gray-500">Store ID: {storeId}</p>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-5xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Inventory</h1>
+            <p className="text-slate-500 text-sm mt-0.5">
+              {fetching
+                ? "Loading…"
+                : `${products.length} product${products.length !== 1 ? "s" : ""} in stock`}
+            </p>
+          </div>
 
-        {/* Step 1: Product details Dialog */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>Add Product</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Product Details</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="name">Product Name</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g., Silk Kurti"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Short description (e.g., Red with gold embroidery)"
-                />
-              </div>
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="price">Price</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  />
-                </div>
-                <div className="flex-1">
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={form.quantity}
-                    onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                  />
-                </div>
-              </div>
-              <Button onClick={() => { setOpen(false); setImageDialog(true); }}>
-                Next: Add Image
+          {/* Step 1: Product details dialog */}
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-slate-950 hover:bg-slate-800 rounded-lg text-sm">
+                <Plus size={15} />
+                Add Product
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Step 2: Image dialog (Updated for Nano Banana) */}
-        <Dialog open={imageDialog} onOpenChange={setImageDialog}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Add Image</DialogTitle>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-6 py-4">
-              {/* ---- AI Section ---- */}
-              <div className="space-y-2 border-b pb-6">
-                <div className="flex justify-between items-center">
-                   <Label htmlFor="prompt">Generate Image</Label>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Product Details</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Product Name</Label>
+                  <Input
+                    id="name"
+                    value={form.name}
+                    onChange={(e) =>
+                      setForm({ ...form, name: e.target.value })
+                    }
+                    placeholder="e.g., Silk Kurti"
+                  />
                 </div>
-                
-                <Textarea
-                  id="prompt"
-                  value={imagePrompt}
-                  onChange={(e) => setImagePrompt(e.target.value)}
-                  disabled={isBusy || !!imageUrl}
-                  className="resize-none h-24"
-                />
-                
+                <div className="space-y-1.5">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm({ ...form, description: e.target.value })
+                    }
+                    placeholder="Short description (optional)"
+                  />
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex-1 space-y-1.5">
+                    <Label htmlFor="price">Price (₹)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      value={form.price}
+                      onChange={(e) =>
+                        setForm({ ...form, price: e.target.value })
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1.5">
+                    <Label htmlFor="quantity">Quantity</Label>
+                    <Input
+                      id="quantity"
+                      type="number"
+                      value={form.quantity}
+                      onChange={(e) =>
+                        setForm({ ...form, quantity: e.target.value })
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
                 <Button
-                  onClick={handleAIGenerate}
-                  disabled={isBusy || !imagePrompt.trim() || !!imageUrl}
-                  className="w-full bg-black hover:bg-neutral-800"
+                  className="w-full bg-slate-950 hover:bg-slate-800"
+                  onClick={() => {
+                    setOpen(false);
+                    setImageDialog(true);
+                  }}
+                  disabled={!form.name || !form.price || !form.quantity}
                 >
-                  {generating ? "Generating Image..." : "Generate Image"}
+                  Next: Add Image
                 </Button>
               </div>
+            </DialogContent>
+          </Dialog>
 
-              {/* ---- Local Upload Section ---- */}
-              <div className="flex flex-col gap-3">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept="image/*"
-                  hidden
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) uploadToCloudinary(file);
-                    e.target.value = "";
-                  }}
-                />
+          {/* Step 2: Image dialog */}
+          <Dialog open={imageDialog} onOpenChange={setImageDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Product Image</DialogTitle>
+              </DialogHeader>
 
-                <Button
-                  variant="outline"
-                  disabled={isBusy || !!imageUrl}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {uploading && !generating ? "Uploading..." : "Or Select Local File"}
-                </Button>
+              <div className="flex flex-col gap-5 py-2">
+                {/* AI generation */}
+                <div className="space-y-2">
+                  <Label htmlFor="prompt" className="flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-violet-500" />
+                    AI-generated image
+                  </Label>
+                  <Textarea
+                    id="prompt"
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    disabled={isBusy || !!imageUrl}
+                    className="resize-none h-20 text-sm"
+                  />
+                  <Button
+                    onClick={handleAIGenerate}
+                    disabled={isBusy || !imagePrompt.trim() || !!imageUrl}
+                    className="w-full bg-slate-950 hover:bg-slate-800"
+                  >
+                    {generating ? "Generating…" : "Generate with AI"}
+                  </Button>
+                </div>
 
-                {/* Preview */}
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 border-t border-slate-200" />
+                  <span className="text-xs text-slate-400 font-medium">OR</span>
+                  <div className="flex-1 border-t border-slate-200" />
+                </div>
+
+                {/* File upload */}
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadToCloudinary(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    disabled={isBusy || !!imageUrl}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full gap-2"
+                  >
+                    <ImageIcon size={14} />
+                    {uploading && !generating ? "Uploading…" : "Upload from device"}
+                  </Button>
+                </div>
+
+                {/* Image preview */}
                 {imageUrl && (
-                  <div className="relative rounded-md overflow-hidden border mt-2">
-                    <img src={imageUrl} className="w-full h-48 object-cover" alt="Preview" />
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => { setImageUrl(null); setImagePrompt(""); }}
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200">
+                    <img
+                      src={imageUrl}
+                      className="w-full h-48 object-cover"
+                      alt="Preview"
+                    />
+                    <button
+                      onClick={() => {
+                        setImageUrl(null);
+                        setImagePrompt("");
+                      }}
+                      className="absolute top-2 right-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium px-2 py-1 rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors"
                     >
                       Remove
-                    </Button>
+                    </button>
                   </div>
                 )}
               </div>
-            </div>
 
-            <Button disabled={isBusy || !imageUrl} onClick={createProduct} className="w-full">
-               {loading ? "Saving..." : "Save Product"}
+              <Button
+                disabled={isBusy || !imageUrl}
+                onClick={createProduct}
+                className="w-full bg-slate-950 hover:bg-slate-800"
+              >
+                {loading ? "Saving…" : "Save Product"}
+              </Button>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Product grid */}
+        {fetching ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl border border-slate-200 overflow-hidden animate-pulse"
+              >
+                <div className="h-44 bg-slate-100" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 w-3/4 bg-slate-200 rounded" />
+                  <div className="h-3 w-1/2 bg-slate-100 rounded" />
+                  <div className="h-4 w-1/3 bg-slate-200 rounded mt-3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <div className="h-16 w-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-5">
+              <Package className="h-8 w-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              No products yet
+            </h3>
+            <p className="text-slate-500 text-sm max-w-xs mb-6 leading-relaxed">
+              Add your first product to start managing inventory and creating invoices.
+            </p>
+            <Button
+              onClick={() => setOpen(true)}
+              className="gap-2 bg-slate-950 hover:bg-slate-800"
+            >
+              <Plus size={15} />
+              Add first product
             </Button>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Grid Display */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {products.map((p) => (
-          <Card key={p.id} className="overflow-hidden">
-            {p.imageUrl ? (
-              <img src={p.imageUrl} className="w-full h-48 object-contain" alt={p.name} />
-            ) : (
-              <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400">
-                No Image
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {products.map((p) => (
+              <div
+                key={p.id}
+                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-slate-300 hover:shadow-md transition-all duration-200"
+              >
+                {p.imageUrl ? (
+                  <img
+                    src={p.imageUrl}
+                    className="w-full h-44 object-cover"
+                    alt={p.name}
+                  />
+                ) : (
+                  <div className="w-full h-44 bg-slate-50 flex flex-col items-center justify-center text-slate-300 gap-2">
+                    <Package size={28} />
+                    <span className="text-xs">No image</span>
+                  </div>
+                )}
+                <div className="p-4">
+                  <h2 className="font-semibold text-slate-900 text-sm leading-tight">
+                    {p.name}
+                  </h2>
+                  {p.description && (
+                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
+                      {p.description}
+                    </p>
+                  )}
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-base font-bold text-slate-900">
+                      ₹{Number(p.price).toLocaleString("en-IN")}
+                    </span>
+                    <span
+                      className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        p.quantity <= 5
+                          ? "bg-red-50 text-red-600"
+                          : p.quantity <= 20
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {p.quantity} in stock
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
-            <div className="p-4">
-              <h2 className="font-medium text-lg">{p.name}</h2>
-              <p className="text-sm text-gray-500">{p.description}</p>
-              <div className="mt-2 flex justify-between">
-                <span className="font-bold">₹{p.price}</span>
-                <span className="text-gray-500">Qty: {p.quantity}</span>
-              </div>
-            </div>
-          </Card>
-        ))}
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
