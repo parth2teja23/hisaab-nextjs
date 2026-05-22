@@ -97,11 +97,20 @@ export default function StoreDashboard() {
     0
   );
   const recentTransactions = [...invoices]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 6);
+
+  // Build last-7-day revenue bars
+  const revenueBars = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayStr = d.toDateString();
+    const total = invoices
+      .filter((inv) => new Date(inv.createdAt).toDateString() === dayStr)
+      .reduce((s, inv) => s + Number(inv.totalAmount), 0);
+    return { label: d.toLocaleDateString("en-IN", { weekday: "short" }), total };
+  });
+  const maxBar = Math.max(...revenueBars.map((b) => b.total), 1);
 
   const stats = [
     {
@@ -155,6 +164,40 @@ export default function StoreDashboard() {
             ? [1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)
             : stats.map((s) => <StatCard key={s.label} {...s} />)}
         </div>
+
+        {/* Revenue Chart */}
+        {!loading && (
+          <div className="bg-white rounded-xl border border-slate-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-semibold text-slate-900">Revenue — Last 7 Days</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Daily invoice totals</p>
+              </div>
+              <span className="text-sm font-bold text-slate-900">
+                ₹{totalRevenue.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <div className="flex items-end gap-2 h-28">
+              {revenueBars.map((bar, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="w-full relative group" style={{ height: "88px" }}>
+                    <div
+                      className="absolute bottom-0 w-full rounded-t-md transition-all duration-500 bg-slate-900 hover:bg-blue-600"
+                      style={{ height: `${Math.max((bar.total / maxBar) * 100, bar.total > 0 ? 8 : 2)}%` }}
+                    >
+                      {bar.total > 0 && (
+                        <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          ₹{bar.total.toLocaleString("en-IN")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium">{bar.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Recent Transactions */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">

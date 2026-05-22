@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     if (!session?.user?.email)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, email, phone } = await req.json();
+    const { name, email, phone, storeId } = await req.json();
     if (!name || !phone)
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -26,20 +26,21 @@ export async function POST(req: Request) {
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    // Create or update global customer (not store specific)
+    // Create or update the global customer record
     const customer = await prisma.customer.upsert({
       where: { phone },
-      update: {
-        name,
-        email,
-      },
-      create: {
-        name,
-        email,
-        phone,
-        userId: user.id,
-      },
+      update: { name, email },
+      create: { name, email, phone, userId: user.id },
     });
+
+    // Link the customer to the store if storeId is provided
+    if (storeId) {
+      await prisma.customerStore.upsert({
+        where: { customerId_storeId: { customerId: customer.id, storeId } },
+        update: {},
+        create: { customerId: customer.id, storeId },
+      });
+    }
 
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {

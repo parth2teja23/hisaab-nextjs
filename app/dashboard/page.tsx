@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Store, ArrowRight, Package, FileText, Users } from "lucide-react";
+import { toast } from "sonner";
 
 interface StoreType {
   id: string;
@@ -57,9 +58,13 @@ export default function StoresPage() {
         setStores((prev) => [...prev, newStore]);
         setName("");
         setOpen(false);
+        toast.success("Store created!", { description: `"${newStore.name}" is ready to use.` });
+      } else {
+        toast.error("Failed to create store.");
       }
     } catch (err) {
       console.error("Error creating store:", err);
+      toast.error("Something went wrong.");
     } finally {
       setLoading(false);
     }

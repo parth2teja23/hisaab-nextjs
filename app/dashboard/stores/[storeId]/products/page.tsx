@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Package, ImageIcon, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -140,6 +141,11 @@ export default function ProductsPage() {
         setImagePrompt("");
         setOpen(false);
         setImageDialog(false);
+        toast.success(`${newProduct.name} added`, {
+          description: `₹${Number(newProduct.price).toLocaleString("en-IN")} · ${newProduct.quantity} in stock`,
+        });
+      } else {
+        toast.error("Failed to save product.");
       }
     } catch (err) {
       console.error(err);

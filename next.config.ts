@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["pdfkit"], 
+  serverExternalPackages: ["pdfkit"],
+  turbopack: {
+    root: path.resolve(__dirname),
   },
 };
 

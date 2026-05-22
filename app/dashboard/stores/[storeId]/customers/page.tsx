@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Users, Phone, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 type Customer = {
   id: string;
@@ -53,6 +54,9 @@ export default function StoreCustomersPage() {
       setCustomers((prev) => [...prev, newCust]);
       setForm({ name: "", email: "", phone: "" });
       setOpen(false);
+      toast.success(`${newCust.name} added`, { description: "Customer linked to this store." });
+    } else {
+      toast.error("Failed to add customer.");
     }
 
     setLoading(false);

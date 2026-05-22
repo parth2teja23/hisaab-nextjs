@@ -20,6 +20,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Plus, Download, FileText, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 import type { Invoice } from "@/lib/types";
 
@@ -62,7 +63,7 @@ export default function StoreInvoicesPage() {
   useEffect(() => {
     if (!storeId) return;
 
-    fetch(`/api/customers/store/`)
+    fetch(`/api/customers/store?storeId=${storeId}`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setCustomers(data);
@@ -114,6 +115,11 @@ export default function StoreInvoicesPage() {
         setOpen(false);
         setForm({ customerPhone: "" });
         setInvoiceItems([]);
+        toast.success(`Invoice #${newInvoice.invoiceNumber} created`, {
+          description: `₹${Number(newInvoice.totalAmount).toLocaleString("en-IN")} — PDF ready to download.`,
+        });
+      } else {
+        toast.error("Failed to create invoice.");
       }
     } finally {
       setLoading(false);
@@ -187,6 +193,7 @@ export default function StoreInvoicesPage() {
     );
 
     doc.save(`invoice-${inv.invoiceNumber ?? inv.id}.pdf`);
+    toast.success(`Invoice #${inv.invoiceNumber} downloaded`);
   }
 
   const sortedInvoices = [...invoices].sort(
