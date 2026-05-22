@@ -100,6 +100,12 @@ model Product {
 }
 
 
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
 model Invoice {
   id            String        @id @default(cuid())
   invoiceNumber Int           @default(autoincrement())
@@ -108,6 +114,7 @@ model Invoice {
   store         Store         @relation(fields: [storeId], references: [id])
   storeId       String
   totalAmount   Float
+  status        InvoiceStatus @default(PENDING)
   createdAt     DateTime      @default(now())
   items         InvoiceItem[]
 }

@@ -132,6 +132,29 @@ export async function POST(req: Request) {
   }
 }
 
+export async function PATCH(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { id, status } = await req.json();
+    if (!id || !status)
+      return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
+
+    const updated = await prisma.invoice.update({
+      where: { id },
+      data: { status },
+      include: { customer: true, items: { include: { product: true } }, store: true },
+    });
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("PATCH /api/invoices error:", err);
+    return NextResponse.json({ error: "Failed to update invoice." }, { status: 500 });
+  }
+}
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);

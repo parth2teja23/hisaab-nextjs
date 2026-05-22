@@ -9,6 +9,7 @@ import {
   Users,
   FileText,
   ArrowUpRight,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 import type { Invoice } from "@/lib/types";
@@ -111,6 +112,7 @@ export default function StoreDashboard() {
     return { label: d.toLocaleDateString("en-IN", { weekday: "short" }), total };
   });
   const maxBar = Math.max(...revenueBars.map((b) => b.total), 1);
+  const lowStock = products.filter(p => p.quantity <= 5);
 
   const stats = [
     {
@@ -194,6 +196,24 @@ export default function StoreDashboard() {
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium">{bar.label}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Low Stock Alerts */}
+        {!loading && lowStock.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle size={16} className="text-red-500" />
+              <h2 className="font-semibold text-red-800 text-sm">Low Stock Alert — {lowStock.length} item{lowStock.length !== 1 ? "s" : ""} need restocking</h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {lowStock.map(p => (
+                <span key={p.id} className="inline-flex items-center gap-1.5 bg-white border border-red-200 text-red-700 text-xs font-medium px-3 py-1.5 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  {p.name} — {p.quantity} left
+                </span>
               ))}
             </div>
           </div>

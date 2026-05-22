@@ -11,12 +11,15 @@ export interface InvoiceItem {
   };
 }
 
+export type InvoiceStatus = "PENDING" | "PAID" | "OVERDUE";
+
 export interface Invoice {
   id: string;
   invoiceNumber: number;
   customerId: string;
   storeId: string;
   totalAmount: number;
+  status: InvoiceStatus;
   createdAt: Date | string;
   customer: {
     id: string;

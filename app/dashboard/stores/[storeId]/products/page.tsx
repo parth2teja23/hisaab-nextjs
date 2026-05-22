@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Package, ImageIcon, Sparkles } from "lucide-react";
+import { Plus, Package, ImageIcon, Sparkles, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface Product {
@@ -38,6 +38,7 @@ export default function ProductsPage() {
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [fetching, setFetching] = useState(true);
+  const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -54,12 +55,17 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (!storeId) return;
-    fetch(`/api/products?storeId=${storeId}`)
+    setFetching(true);
+    const t = setTimeout(() => {
+      const url = `/api/products?storeId=${storeId}${search ? `&search=${encodeURIComponent(search)}` : ""}`;
+      fetch(url)
       .then((res) => res.json())
       .then((data) => setProducts(Array.isArray(data) ? data : []))
-      .catch((err) => console.error(err))
-      .finally(() => setFetching(false));
-  }, [storeId]);
+        .catch((err) => console.error(err))
+        .finally(() => setFetching(false));
+    }, 300);
+    return () => clearTimeout(t);
+  }, [storeId, search]);
 
   useEffect(() => {
     if (imageDialog && form.name) {
@@ -169,6 +175,13 @@ export default function ProductsPage() {
                 : `${products.length} product${products.length !== 1 ? "s" : ""} in stock`}
             </p>
           </div>
+
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" className="pl-8 pr-7 py-2 text-sm border border-slate-200 rounded-lg bg-white w-40 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:w-52 transition-all" />
+              {search && <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X size={12} /></button>}
+            </div>
 
           {/* Step 1: Product details dialog */}
           <Dialog open={open} onOpenChange={setOpen}>
@@ -336,6 +349,7 @@ export default function ProductsPage() {
               </Button>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Product grid */}

@@ -40,12 +40,17 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const storeId = searchParams.get("storeId");
+  const search = searchParams.get("search") ?? "";
 
   if (!storeId)
     return NextResponse.json({ error: "Store ID required" }, { status: 400 });
 
   const products = await prisma.product.findMany({
-    where: { storeId },
+    where: {
+      storeId,
+      ...(search && { name: { contains: search, mode: "insensitive" } }),
+    },
+    orderBy: { quantity: "asc" },
   });
 
   return NextResponse.json(products);
